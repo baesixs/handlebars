@@ -1,0 +1,1398 @@
+Personalizing Templates with Handlebars
+To use dynamic content to personalize the messages you send with Iterable, use Handlebars. With Handlebars, you can display, format, reference and reason about user profile fields and event data in message templates.
+
+Table of contents
+Getting started with Handlebars
+Definition: merge parameter
+Sample user profile data
+Sample event data
+Using Handlebars in HTML source
+Referencing user profile and event fields with Handlebars
+Fields containing spaces or a period, or starting with a number
+Fields containing HTML
+Handlebars helpers and block helpers
+Helpers
+Block helpers
+Working with strings
+Regular expression matching (#ifMatchesRegexStr)
+Contains a substring (#ifContainsStr)
+Checking equality and alphabetical order (#eq, #lt, #lte, #gt, #gte)
+String length (length)
+Capitalize first letter of a string (`capitalizeFirst`)
+Capitalize first letter of each word in a string (capitalize)
+Capitalize entire string (upper)
+Lowercase entire string (lower)
+Display default value if no value exists for a parameter (defaultIfEmpty)
+Render HTML contained within a field
+Remove all instances of a specified string (cut)
+Replace all instances of a string (replace)
+Get substring by index (substring)
+Abbreviate string to a specified length (abbreviate)
+Convert to lowercase, remove numbers and special characters, and convert spaces to hyphens (slugify)
+Replace newlines (#breaklines)
+URL encoding (#urlEncode)
+Write the provided argument as a JSON string (toJson)
+Write the provided argument as a URL encoded JSON string (toUrlEncodedJson)
+Base64-encode a merge parameter (#base64)
+Generate a SHA1 HMAC (hmacSHA1)
+Generate a SHA1 hash (sha1, #sha1)
+Generate an MD5 hash (md5, #md5)
+Generate a SHA256 hash (sha256, #sha256)
+Pad a parameter (center)
+Working with numbers (longs and doubles)
+Equals (#ifEq, eq)
+Greater than (#ifGt, gt)
+Greater than or equal (#ifGte, gte)
+Less than (#ifLt, lt)
+Less than or equal (#ifLte, lte)
+If remainder equals (#ifModEq)
+Formatting and rounding (numberFormat)
+Addition, subtraction, multiplication, division, modulo (math)
+Working with lists/arrays
+Show item at index (square brackets)
+Iterating over all values (#each)
+Concatenate values in an array into a single string (join)
+Check for an item (#ifContains)
+Minimum value in list (#minInList)
+Maximum value in list (#maxInList)
+Size (size)
+Comparing two arrays (#eq, eq, #neq, neq)
+First and last items (@first, @last)
+Working with objects
+Comparing two objects (#eq, eq, #neq, neq)
+Working with dates
+Date comparison (#ifGt, #ifGte, #ifLt, #ifLte)
+Date formatting (dateFormat)
+Date math (dateMath)
+Current date and time (now)
+Conditional and boolean logic
+True and false
+If statements (#if)
+And (#and, and)
+Or (#or, or)
+Not (#not, not)
+Unless (#unless)
+Other Handlebars helpers
+@key and this
+Looking up a value (#lookup)
+Assigning a variable (#assign)
+Inserting fields into snippets
+Skipping/aborting a send
+JSON-LD
+Further reading
+Getting started with Handlebars
+This section provides an overview of using Handlebars expressions in Iterable to reference, manipulate, and reason about data stored on a user profile or an event.
+
+Definition: merge parameter
+Wrapping the name of a user profile or event field in double curly braces creates a merge parameter. When using merge parameter, data from the relevant user profile or event is merged at send time into the template or URL being modified, customizing and personalizing it as necessary.
+
+Sample user profile data
+To view a sample user profile, navigate to Audience > Contact Lookup and search for an existing Iterable user profile. The user profile will look similar to this:
+
+Example user profile
+
+Projects that use userId as a unique identifier can also use this field to load data for a user—this includes userID-based projects and hybrid projects. Read Project Types and Unique Identifiers to learn more.
+
+Sample event data
+To view sample events saved by an Iterable project, navigate to Insights > Logs > Events.
+
+Iterable's events log
+
+Using Handlebars in HTML source
+In an Iterable message template, you can add Handlebars expressions directly in the WYSIWYG editor or in its HTML source. When editing the HTML source, it is generally a good idea to comment out any Handlebars expressions that do not output a value.
+
+In rare circumstances, the WYSIWYG editor can get confused by the presence of Handlebars expressions in the HTML source, which can lead to errors. Since the WYSIWYG editor ignores comments in the HTML source, commenting out Handlebars expressions can resolve this issue.
+
+For example, do not enter this Handlebars expression in a message template's HTML source:
+
+{{#if activeUser}}
+    <div>Hi active user!</div>
+{{else}}
+    <div>Hi inactive user</div>
+{{/if}}
+Instead, enter:
+
+<!--{{#if activeUser}}-->
+    <div>Hi active user!</div>
+<!--{{else}}-->
+    <div>Hi inactive user</div>
+<!--{{/if}}-->
+If you're entering a Handlebars expression that outputs a value (for example, an expression like {{email}} that outputs the value of a user profile field), do not comment it out. Commenting out such an expression would prevent its value from rendering in the template.
+
+It is safe to comment out Handlebars expressions such as conditionals, looping constructions, closing statements, etc., that do not output any value. For these expressions, there is no risk of preventing a necessary value from rendering in the message template.
+
+The rest of this document displays uncommented Handlebars expressions. That is, it displays them as they should be entered in the WYSIWYG editor, not the HTML source. When editing the HTML source of a message template, adjust the Handlebars expressions as demonstrated in the above example.
+
+Referencing user profile and event fields with Handlebars
+To reference any field from a user profile or campaign-triggering event in an Iterable message template, use Handlebars expressions.
+
+The most basic Handlebars expressions simply output the value of a user profile or event field by wrapping its name in curly braces. For example, this Handlebars expression outputs a user's email address:
+
+{{email}}
+NOTES
+
+Field names are case sensitive.
+The same double curly brace syntax can reference both user profile and event fields.
+If the same field exists on both the user profile and the campaign's triggering event, Iterable will use the value on the event.
+Fields containing spaces or a period, or starting with a number
+To use Handlebars to reference a field that contains spaces or a period, or starts with a number, surround the field in square brackets (as well as double curly braces).
+
+For example:
+
+{{[first name]}}
+{{[1stName]}}
+{{[User Signed Up].[First Name]}}
+WARNING
+
+If possible, avoid using periods in field names, since they can cause difficulty when referencing data stored in nested objects on a user profile or event.
+
+Fields containing HTML
+To use Handlebars to display the HTML contained in a user profile or event field, wrap the field in triple curly braces (otherwise, the HTML will render as plain text). For example:
+
+{{{customHTMLparameter}}}
+TIP
+
+If the HTML-containing parameter comes from a data feed (and you have not merged context for the data feed and the user profile), surround the parameter in double square bracketes and single curly braces. For example:
+
+[[{customHTMLparameter}]]
+Handlebars helpers and block helpers
+Handlebars users helpers to manipulate, format, and loop through user profile and event data, to perform calculations, and to apply boolean and conditional logic. Helpers come in two varieties: helpers and block helpers.
+
+Iterable message templates use Handlebars helpers and block helpers to display user and event profile data in a way that is most suitable to each recipient.
+
+Helpers and block helpers can work with user profile fields, event fields, and literals.
+
+For example, consider the capitalize Handlebars helper, which capitalizes each word in a string:
+
+{{capitalize "war and peace"}}
+{{capitalize favoriteBook}}
+Assuming the existence of a favoriteBook user profile or event field, these examples will output:
+
+War And Peace
+Animal Farm
+Helpers
+A Handlebars helper is a function that takes zero or more parameters and returns a value. For example:
+
+{{capitalizeFirst firstName}}
+This helper renders the firstName parameter with its first letter capitalized. The value stored in the firstName parameter is not changed.
+
+To nest sequential calls to Handlebars helper methods, use parentheses. For example :
+
+{{capitalizeFirst (lower firstName)}}
+This example lowercases every letter in firstName, and then capitalizes its first letter, rendering the output in the message template. Again, the value stored in firstName is not modified.
+
+Block helpers
+Like helpers, block helpers are functions. They are generally used to perform conditional logic or to iterate over collections of items.
+
+A block helper has an opening statement, a block of content, and a matching closing statement. The opening statement is always preceded by a # character. For example:
+
+{{#each shoppingCartItems}}
+    <div>Item name: {{name}}</div>
+    <div>Item price: {{price}}</div>
+{{/each}}
+This example iterates over the items stored in the shoppingCartItems, displaying the name and price for each, like this:
+
+Item name: shoes
+Item price: 59.99
+   
+Item name: jacket
+Item proice: 70.00
+Working with strings
+This section describes various helpers useful for working with strings in Handlebars.
+
+Regular expression matching (#ifMatchesRegexStr)
+You can use regular expressions to compare string. For example:
+
+To check whether a given string matches (exactly) another string:
+
+{{#ifMatchesRegexStr gender "male"}}
+    <div>Buy this tie!</div>
+{{/ifMatchesRegexStr}}
+To check whether a string contains a another string:
+
+{{#ifMatchesRegexStr catName ".*[Bb]ojangles.*"}}
+    <div>Is your cat's name Mr. Bojangles?</div>
+{{/ifMatchesRegexStr}}
+NOTES
+
+Regular expression queries are case-sensitive, which is why this example uses [Bb] to search for both cases.
+To learn more about using regular expressions in Iterable, read Regular expressions for use in segmentation and Handlebars.
+Contains a substring (#ifContainsStr)
+Search a string for a particular substring. If the substring is found, render the block's content. For example:
+
+{{#ifContainsStr haystack "needle"}}
+    <div>Haystack contains needle!</div>
+{{/ifContainsStr}}
+This example searches the haystack field for "needle". If "needle" is found, it renders the string "Haystack contains needle!"
+
+Checking equality and alphabetical order (#eq, #lt, #lte, #gt, #gte)
+To check whether two strings are in alphabetical order, use the various comparison helpers:
+
+#eq, eq: equals
+#lt, lt: less than
+#lte, lte: less than or equal
+#gt, gt: greater than
+#gte, gte: greater than or equal
+NOTES
+
+If an #lt, lt, #lte, lte, #gt, gt, #gte, or gte expression references a non-existent or null field, the template will fail and the message will not be sent to that user.
+
+Alphabetic order comparisons are case sensitive.
+
+For detailed information about these comparisons, read the docs about the Java compareTo method.
+
+The below comparisons work for string literals as well as fields on user profiles and events.
+
+For example:
+
+To check whether "cat" comes before "dog" in alphabetical order:
+
+{{#lt "cat" "dog"}}
+    cat comes before dog!
+{{else}}
+    dog comes before cat!
+{{/lt}}
+This expression renders "cat comes before dog!"
+
+To check whether "dog" comes after "cat" in alphabetical order:
+
+{{#gt "dog" "cat"}}
+    dog comes after cat!
+{{else}}
+    dog comes before cat!
+{{/lt}}
+This expression renders "dog comes after cat!"
+
+To perform a string comparison in a boolean expression, use the non-block versions of these helpers:
+
+{{#if (gt "dog" "cat")}}
+    dog comes after cat!
+{{else}}
+    dog comes before cat!
+{{/if}}
+For more information about the #if helper, see Conditional and boolean logic.
+
+String length (length)
+Use the length method to display the length of a string. For example:
+
+{{myMergeParam.length}}
+For a myMergeParam field with a value that's an 8-character string, his example will output:
+
+8
+Capitalize first letter of a string (capitalizeFirst)
+Use the capitalizeFirst helper to capitalize the first letter of a string. For example:
+
+{{capitalizeFirst myMergeParam}}
+Assuming myMergeParam is set to iterable, this will output:
+
+Iterable
+Capitalize first letter of each word in a string (capitalize)
+Use the capitalize helper to capitalize the first letter of each word in a string. For example:
+
+{{capitalize myMergeParam}}
+Assuming myMergeParam is set to iterable document, this will output:
+
+Iterable Document
+Capitalize entire string (upper)
+Use the upper helper to capitalize every letter in a string. For example:
+
+{{upper myMergeParam}}
+Assuming myMergeParam is set to ItErAbLe, this will output:
+
+ITERABLE
+Lowercase entire string (lower)
+Use the lower method to lowercase every letter in a string. For example:
+
+{{lower myMergeParam}}
+Assuming myMergeParam is set to ItErAbLe, this will output:
+
+iterable
+Display default value if no value exists for a parameter (defaultIfEmpty)
+Use defaultIfEmpty to display a default value for a parameter that's null, undefined, or an empty string. For example:
+
+{{defaultIfEmpty myMergeParam "My default value"}}
+Assuming myMergeParam is null, undefined, or an empty string, this will output:
+
+My default value
+Render HTML contained within a field
+To render HTML contained in a field, wrap the field in triple curly braces. For example:
+
+{{{myMergeParam}}}
+Remove all instances of a specified string (cut)
+To display a string with all instances of a certain string removed, use the cut helper. For example:
+
+{{cut myMergeParam " "}}
+Assuming myMergeParam is set to The cat climbed the tree, this will output:
+
+Thecatclimbedthetree
+This does not affect the value stored in myMergeParam, which (in this example) would still contain spaces.
+
+Replace all instances of a string (replace)
+To replace all instances of one string with another string, use the replace helper. For example:
+
+{{replace myMergeParam " " "-"}}
+Assuming myMergeParam is set to The dog ran around the block, this will output:
+
+The-dog-ran-around-the-block
+This does not affect the value stored in myMergeParam, which (in this example) would still contain spaces.
+
+Get substring by index (substring)
+To display a substring of a string, use the substring helper, which accepts three parameters:
+
+(required) The string that contains the substring.
+(required) The starting index, in the containing string, of the substring.
+(optional) The index in the containing string of the first character past the end of the substring. The first character in the containing string has index 0.
+For example:
+
+{{substring myMergeParam 3 6}}
+Assuming myMergeParam is set to iterable document, this example:
+
+Finds the substring that starts at index 3 of iterable document (the r)
+Outputs the characters up to (but not including) index 6 (so, every character up to but not including l)
+Putting it together, this example outputs:
+
+rab
+This does not affect the value stored in myMergeParam.
+
+Abbreviate string to a specified length (abbreviate)
+To output a string, as abbreviated to a given length, use the abbreviate helper. This helper takes a single parameter: the final length of the string, including three characters for .... For example:
+
+{{abbreviate myMergeParam 7}}
+Assuming myMergeParam is set to Apples are red, this will output:
+
+Appl...
+(Four characters for Appl and three for ..., making seven total characters)
+
+This does not affect the value stored in myMergeParam.
+
+Convert to lowercase, remove numbers and special characters, and convert spaces to hyphens (slugify)
+Use the slugify helper to output a string in lowercase, with numbers and special characters removed, and spaces converted to hyphens. For example:
+
+{{slugify myMergeParam}}
+Assuming myMergeParam is set to It's time for our 2nd annual fall sale, this will output:
+
+its-time-for-our-nd-annual-fall-sale
+The apostrophe has been removed, the 2 has been removed, and spaces have been converted to hyphens.
+
+This does not affect the value stored in myMergeParam.
+
+Replace newlines (#breaklines)
+To replace \n or \r\n with <br>, use the #breaklines block helper. Do this to help ensure that newlines display correctly in HTML.
+
+For example, assume that myMergeParam is set to:
+
+Hi there!
+
+How are you?
+And consider this #breaklines expression:
+
+{{#breaklines}}{{myMergeParam}}{{/breaklines}}
+This will output:
+
+Hi there!<br><br>How are you?
+This does not affect the value stored in myMergeParam.
+
+URL encoding (#urlEncode)
+To URL encode a string, use the #urlEncode block helper. For example:
+
+{{#urlEncode}}{{myMergeParam}}{{/urlEncode}}
+Assuming that myMergeParam is set to fall sale, this example will output:
+
+fall+sale
+This helper:
+
+Does not encode alphanumeric characters, periods, hyphens, asterisks, or underscores. However, it changes spaces to plus signs, and URL-encodes all other characters.
+Does not affect the value stored in the provided field (in the example, this is myMergeParam).
+Write the provided argument as a JSON string (toJson)
+Output the value it would be formatted when used as the value for a JSON field. For example:
+
+{{toJson myMergeParam}}
+For this example, the output depends on the data type of myMergeParam:
+
+myMergeParam	Data type	Output
+My string	String	"My string"
+1234	Long	1234
+3.14	Float	3.14
+{"field1": "value"}	Object	{"field1": "value"}
+[1,2,3,4]	Array	[1,2,3,4]
+This does not affect the value stored in myMergeParam.
+
+Write the provided argument as a URL encoded JSON string (toUrlEncodedJson)
+Output the value it would be formatted when used as the value for a JSON field, URL-encoding special characters (such as quotes, curly braces, and square brackets).
+
+{{toUrlEncodedJson myMergeParam}}
+For this example, the output depends on the data type of myMergeParam:
+
+myMergeParam	Data type	Output
+My string	String	%22My+string%22
+1234	Long	1234
+3.14	Float	3.14
+{"field1": "value"}	Object	%7B%22field1%22%3A%22value%22%7D
+[1,2,3,4]	Array	%5B1%2C2%2C3%2C4%5D
+This does not affect the value stored in myMergeParam.
+
+Base64-encode a merge parameter (#base64)
+To base64-encode a value, use the #base64 block helper. For example:
+
+{{#base64}}{{myMergeParam}}{{/base64}}
+{{#base64}}user@example.com{{/base64}}
+Assuming myMergeParam is set to user@example.com, each of the above examples will output the same value:
+
+ZG9jc0BpdGVyYWJsZS5jb20=
+ZG9jc0BpdGVyYWJsZS5jb20=
+This does not affect the value stored in myMergeParam.
+
+Generate a SHA1 HMAC (hmacSHA1)
+To generate a SHA1 HMAC, use the hmacSHA1 helper. This helper concatenates the (arbitrary number of) passed-in parameters, then uses the HMAC Secret specified in Project > Settings to generate an HMAC-SHA1. For example:
+
+{{hmacSHA1 field1 field2 field3}}
+This does not affect the values of the passed-in parameters.
+
+Generate a SHA1 hash (sha1, #sha1)
+To generate a SHA1 hash, pass a string (or a field containing a string) to the sha1 helper. For example:
+
+{{sha1 field1}}
+If field1 is set to user@example.com, this example will output:
+
+e364ed2661a7b922e5bf670f2a0946977bf63ae7
+It does not affect the value stored in field1.
+
+Alternatively, use the #sha1 block helper. For example:
+
+{{#sha1}}{{userName}}@{{host}}{{/sha1}}
+This will output the same value as above. It does not affect the values stored in the passed-in parameters.
+
+Generate an MD5 hash (md5, #md5)
+To generate an MD5 hash, pass a string (or a field containing a string) to the md5 helper. For example:
+
+{{md5 field1}}
+If userName is set to docs and host is set to iterable.com, this example will output the MD5 hash for user@example.com:
+
+0e13848b1c7e27eb5d88c5d35b70783e
+Alternatively, use the #md5 block helper. For example:
+
+{{#md5}}{{userName}}@{{host}}{{/md5}}
+This will output the same value as above. It does not affect the value of the passed-in parameters.
+
+Generate a SHA256 hash (sha256, #sha256)
+To generate an SHA256 hash, pass a string (or a field containing a string) to the sha256 helper. For example:
+
+{{sha256 field1}}
+If field1 is set to user@example.com, this example will output:
+
+3a86c6f084291fda367f24e885c74d2f1d50419eb4028d2b1bb2060d8f45ce0b
+It does not affect the values of the passed-in parameters.
+
+Alternatively, use the #sha256 block helper. For example:
+
+{{#sha256}}{{userName}}@{{host}}{{/sha256}}
+If userName is set to docs and host is set to iterable.com, this example will output the same value as above. It does not affect the values of the passed-in parameters.
+
+Pad a parameter (center)
+To output a field to a certain length, surrounded by a repeated character to pad its length and center it, use the center helper. For example:
+
+{{center myMergeParam size=20 pad="-"}}
+If myMergeParam is Hello (five characters), this will output:
+
+-------Hello--------
+The total length is 20 characters, and the original string is roughly centered in the middle.
+
+This does not affect the value of the passed-in parameters.
+
+Working with numbers (longs and doubles)
+This section describes various helpers useful for working with longs and doubles in Handlebars.
+
+Equals (#ifEq, eq)
+There are various ways to test for if one number equals another number:
+
+Use #ifEq to test if one number is equal to another number and to display a block of content if so.
+
+#ifEq can compare numbers represented as strings, longs, and doubles. Arguments need not be of the same type.
+
+This example displays Equals if age equals 21; otherwise, it displays Not equals:
+
+{{#ifEq age 21}}
+    <div>Equals</div>
+{{else}}
+    <div>Not equals</div>
+{{/ifEq}}
+The {{else}} block is optional.
+
+Use eq to test two numbers for equality as part of a boolean expression.
+
+This example compares two sets of numbers. If either set is equal, it displays Found a match. Otherwise, it displays No matches.
+
+{{#or (eq 1 numberOfPurchases) (eq 3 numberOfVisits)}}
+    Found a match
+{{else}}
+    No matches
+{{/or}}
+For numeric comparisons, both arguments passed to eq must be of the same type: double or long.
+
+To output a string based on the result of an eq comparison, set values for yes and no. For example:
+
+{{eq 1 numberOfPurchases yes="Equal" no="Not equal"}}
+For more information on boolean and conditional logic, read Conditional and boolean logic.
+
+Greater than (#ifGt, gt)
+There are various ways to test whether one number is greater than another number:
+
+Use #ifGt to test if one number is greater than another number and to display a block of content if so.
+
+#ifGt can compare numbers represented as strings, longs, and doubles. Arguments need not be of the same type.
+
+This example displays <div>Greater than</div> if age is greater than 21; otherwise, it displays <div>Not greater than</div>:
+
+{{#ifGt age 21}}
+    <div>Greater than</div>
+{{else}}
+    <div>Not greater than</div>
+{{/ifGt}}
+The {{else}} block is optional.
+
+Use gt to test whether one number is greater than another number as part of a boolean expression.
+
+This example compares two sets of numbers. If the first number is greater than the second in both sets, it displays Both are greater than. Otherwise, it displays At least one is not greater than.
+
+{{#and (gt 5 numberOfPurchases) (gt 3 numberOfVisits)}}
+    Both are greater than
+{{else}}
+    At least one is not greater than
+{{/and}}
+For numeric comparisons, both arguments passed to gt must be of the same type: double or long.
+
+To output a string based on the result of an gt comparison, set values for yes and no. For example:
+
+{{gt 1 numberOfPurchases yes="Greater than" no="Not greater than"}}
+If a gt expression references a non-existent or null field, the template will fail and the message will not be sent to that user.
+
+For more information on boolean and conditional logic, read Conditional and boolean logic.
+
+Greater than or equal (#ifGte, gte)
+There are various ways to test whether one number is greater than or equal to another number:
+
+Use #ifGte to test if one number is greater than or equal to another number and to display a block of content if so.
+
+#ifGte can compare numbers represented as strings, longs, and doubles. Arguments need not be of the same type.
+
+This example displays <div>Greater than or equal</div> if age is greater than or equal to 21; otherwise, it displays <div>Not greater than or equal</div>:
+
+{{#ifGte age 21}}
+    <div>Greater than or equal</div>
+{{else}}
+    <div>Not greater than or equal</div>
+{{/ifGte}}
+The {{else}} block is optional.
+
+Use gte to test whether one number is greater than or equal to another number as part of a boolean expression.
+
+This example compares two numbers. If the first number is greater than or equal to the the second, it displays Greater than or equal. Otherwise, it displays Not greater than or equal.
+
+{{#if (gte 5 numberOfPurchases)}}
+    Greater than or equal
+{{else}}
+    Not greater than or equal
+{{/if}}
+For numeric comparisons, both arguments passed to gte must be of the same type: double or long.
+
+To output a string based on the result of an gte comparison, set values for yes and no. For example:
+
+{{gte 1 numberOfPurchases yes="Greater than or equal" no="Not greater than or equal"}}
+If a gte expression references a non-existent field, the template will fail and the message will not be sent to that user.
+
+For more information on boolean and conditional logic, read Conditional and boolean logic.
+
+Less than (#ifLt, lt)
+There are various ways to test whether one number is less than another number:
+
+Use #ifLt to test if one number is less than another number and to display a block of content if so.
+
+#ifLt can compare numbers represented as strings, longs, and doubles. Arguments need not be of the same type.
+
+This example displays <div>Less than</div> if age is less than 21; otherwise, it displays <div>Not less than</div>.
+
+{{#ifLt age 21}}
+    <div>Less than</div>
+{{else}}
+    <div>Not less than</div>
+{{/ifLt}}
+The {{else}} block is optional.
+
+Use lt to test whether one number is less than another number as part of a boolean expression.
+
+This example compares two sets of numbers. If the first number is less than the second in both sets, it displays Both are less than. Otherwise, it displays At least one is not less.
+
+{{#and (lt 5 numberOfPurchases) (lt 3 numberOfVisits)}}
+    Both are less than
+{{else}}
+    At least one is not less than
+{{/and}}
+For numeric comparisons, both arguments passed to lt must be of the same type: double or long.
+
+To output a string based on the result of an lt comparison, set values for yes and no. For example:
+
+{{lt 1 numberOfPurchases yes="Less than" no="Not less than"}}
+If an lt expression references a non-existent or null field, the template will fail and the message will not be sent to that user.
+
+For more information on boolean and conditional logic, read Conditional and boolean logic.
+
+Less than or equal (#ifLte, lte)
+There are various ways to test whether one number is less than or equal to another number:
+
+Use #ifLte to test if one number is less than or equal to another number and to display a block of content if so.
+
+#ifLte can compare numbers represented as strings, longs, and doubles. Arguments need not be of the same type.
+
+This example displays <div>Less than or equal</div> if age is less than or equal to 21; otherwise, it displays <div>Not less than or equal</div>.
+
+{{#ifLte age 21}}
+    <div>Less than or equal</div>
+{{else}}
+    <div>Not less than or equal</div>
+{{/ifLte}}
+The {{else}} block is optional.
+
+Use lte to test whether one number is less than or equal to another number as part of a boolean expression.
+
+This example compares two numbers. If the first number is less than or equal to the the second, it displays Less than or equal. Otherwise, it displays Not less than or equal.
+
+{{#if (lte 5 numberOfPurchases)}}
+    Less than or equal
+{{else}}
+    Not less than or equal
+{{/if}}
+For numeric comparisons, both arguments passed to lte must be of the same type: double or long.
+
+To output a string based on the result of an lte comparison, set values for yes and no. For example:
+
+{{lte 1 numberOfPurchases yes="Less than or equal" no="Not less than or equal"}}
+If an lte expression references a non-existent or null field, the template will fail and the message will not be sent to that user.
+
+For more information on boolean and conditional logic, read Conditional and boolean logic.
+
+If remainder equals (#ifModEq)
+If age divided by 21 has a remainder or 0, output the contents of the block.
+
+{{#ifModEq age 21 0}}
+    <div>Age % 21 == 0 (age is a multiple of 21)</div>
+{{/ifModEq}}
+Formatting and rounding (numberFormat)
+Use the numberFormat helper to format and round numbers in various ways. For example (all examples below use literal numbers, but the numberFormat works with user profile and event data as well):
+
+Format as currency
+
+{{numberFormat 5.2345 "currency" "en_US"}} 
+Output: $5.23
+
+{{numberFormat 5.2345 "currency" "de_DE"}}
+Output: 5,23 &euro;
+
+Format as percent
+
+{{numberFormat .23 "percent"}}
+Output: 23%
+
+Specify a maximum number of fractional digits
+
+{{numberFormat 123.456789 maximumFractionDigits=3}}
+Output: 123.457
+
+Specify a minimum number of fractional digits
+
+{{numberFormat 123.4 minimumFractionDigits=5}}
+Output: 123.40000
+
+Group digits for easy reading
+
+{{numberFormat 1000000 groupingUsed=true}}
+Output: 1,000,000
+
+Use a custom format (as specified by the DecimalFormat documentation)
+
+{{numberFormat 1234.5678 ",000.00"}}
+Output: 1,234.57
+
+{{numberFormat 3 "0.00"}}
+Output: 3.00
+
+Round
+
+Up (away from zero)
+
+{{numberFormat 5.5 "integer" roundingMode="up"}}
+Output: 6
+
+Down (towards zero)
+
+{{numberFormat 5.5 "integer" roundingMode="down"}}`
+Output: 5
+
+Ceiling (towards positive infinity)
+
+{{numberFormat -5.5 "integer" roundingMode="ceiling"}}
+Output: -5
+
+Floor (towards negative infinity)
+
+{{numberFormat -5.5 "integer" roundingMode="floor"}}
+Output: -6
+
+Half even (towards the nearest neighbor; if equidistant, round towards the even neighbor)
+
+{{numberFormat 5.5 "integer" roundingMode="half_even"}}`
+Output: 6
+
+Half up (towards the nearest neighbor; if equidistant, round up)
+
+{{numberFormat -5.5 "integer" roundingMode="half_up"}}
+Output: -6
+
+Half down (towards the nearest neighbor; if equidistant, round down)
+
+{{numberFormat -5.5 "integer" roundingMode="half_down"}}
+Output: -5
+
+NOTES
+
+When no roundingMode is specified, half_even is used.
+For more information and examples, see the Java RoundingMode documentation.
+Addition, subtraction, multiplication, division, modulo (math)
+Use the math helper to perform calculations. For example (all examples below use literal numbers, but the math works with user profile and event data as well):
+
+Addition
+
+{{math 3 '+' 2}}
+Output: 5
+
+Subtraction
+
+{{math 3 '-' 2}}
+Output: 1
+
+Multiplication
+
+{{math 3 '*' 2}}
+Output: 6
+
+Division
+
+{{math 3 '/' 2}}
+Output: 1.5
+
+Modulo
+
+{{math 3 '%' 2}}
+Output: 1
+
+Using Math with Merge Parameters
+
+{{math numberOfCats '+' 2}}
+Output: If the user had 3 cats, the result would be 5 cats.
+
+Working with lists/arrays
+This section describes various helpers useful for working with lists (such as shoppingCartItems) in Handlebars.
+
+Show item at index (square brackets)
+In this example works with the shoppingCartItems array, accessing the name of the second item. Note that the array index starts at 0, so the second item is located at index 1.
+
+<div>Item name: {{shoppingCartItems.[1].name}}</div
+Iterating over all values (#each)
+To loop over the values in an array, use the #each block helper.
+
+This example iterates through the shoppingCartItems array, displaying the name and price for each item:
+
+{{#each shoppingCartItems}}
+    <div>Item name: {{name}}</div>
+    <div>Item price: {{price}}</div>
+{{/each}}
+Output:
+
+<div>Item name: Shoes</div>
+<div>Item price: 59.99</div>
+   
+<div>Item name: Jacket</div>
+<div>Item price: 70.00</div>
+To inspect the index of the current item in the loop, use @index. Keep in mind that the first item in an array has index 0.
+
+{{#each shoppingCartItems}}
+    <div>Item {{math @index '+' 1}} name: {{name}}</div>
+{{/each}}
+Output example:
+
+<div>Item 1 name: Shoes</div> 
+<div>Item 2 name: Jacket</div>
+For a more detailed example of how to use #each and @index, read Conditional Logic with Handlebars.
+
+Concatenate values in an array into a single string (join)
+To output the items of an array, joined by a particular character, use join. For example:
+
+{{join myMergeParam ", " prefix="Start - " suffix=" - End"}}
+prefix and suffix are optional.
+
+Check for an item (#ifContains)
+This example iterates over the shoppingCartItems array, determining whether it contains both chips and dip, either of them, or none of them.
+
+{{#ifContains shoppingCartItems '{"productName":"chips"}'}}
+   {{#ifContains shoppingCartItems '{"productName":"dip"}'}}
+      <div>You have chips and dip in your cart!</div>
+   {{else}}
+      <div>You just have chips in your cart!</div>
+   {{/ifContains}}
+{{else}}
+   {{#ifContains shoppingCartItems '{"productName":"dip"}'}}
+      <div>You just have dip in your cart</div>
+   {{else}}
+      <div>You have neither chips nor dip in your cart!</div>
+   {{/ifContains}}
+{{/ifContains}}
+Assuming the shoppingCartItems array contains items where productName is chips and where productName is dips, this will output:
+
+You have chips and dip in your cart!
+Here's another example that iterates over a user's emailListIds array, in an e-mail based project, to see if they're a member of a particular static list:
+
+{{#ifContains emailListIds 1234567}} 
+   {{email}} is a member of list 1234567
+{{else}}
+   {{email}} is not a member of list 1234567
+{{/ifContains}}
+Minimum value in list (#minInList)
+To find the smallest item in a list, use #minInList.
+
+This example finds the least expensive item in the shoppingCartItems array based on the price field of each item:
+
+{{#minInList shoppingCartItems "price"}}
+    <div>The least expensive item in your cart is: {{price}}</div>
+{{/minInList}}
+Maximum value in list (#maxInList)
+To find the largest item in a list, use #maxInList:
+
+This example finds the most expensive item in the shoppingCartItems array, based on the price field of each item.
+
+{{#maxInList shoppingCartItems "price"}}
+    <div>The most expensive item in your cart is: {{price}}</div>
+{{/maxInList}}
+Size (size)
+To output the size of an array, use size. For example, to find the size of the shoppingCartItems array:
+
+{{shoppingCartItems.size}}
+Assuming the shoppingCartItems array has two items, this will output:
+
+2
+Comparing two arrays (#eq, eq, #neq, neq)
+To compare two arrays, use the #eq, eq, #neq, and neq helpers.
+
+For two arrays to be considered equal, each array must have the same length and equal items, in the same order.
+
+For example, consider these arrays, as might be stored on a user profile:
+
+{
+  "array1": [1,2,3,4,5],
+  "array2": [1,2,3,4,5],
+  "array3": [4,5]
+}
+Use the #eq block helper to output a block of content when two arrays are equal.
+
+This example outputs The arrays are equal:
+
+{{#eq array1 array2}}
+    The arrays are equal
+{{else}}
+    The arrays are not equal
+{{/eq}}
+This example outputs The arrays are not equal:
+
+{{#eq array1 array3}}
+    The arrays are equal
+{{else}}
+    The arrays are not equal
+{{/eq}}
+
+The #neq helper works similarly, but returns true when the two arrays are not equal.
+
+Use the (non-block) eq helper to compare arrays as part of a boolean expression.
+
+This example outputs The arrays are equal and contain more than two items:
+
+{{#and (gt array1.size 2) (eq array1 array2)}}
+    The arrays are equal and contain more than two items
+{{else}}
+    The arrays are not equal, or they don't contain more than two items.
+{{/and}}
+The neq helper works similarly, but returns true when the two arrays are not equal.
+
+First and last items (@first, @last)
+This example finds the first and last items in the shoppingCartItems array.
+
+{{#each shoppingCartItems}}
+    {{#if @first}}
+        <div>The first item is {{name}}</div>
+    {{/if}}
+    {{#if @last}}
+        <div>The last item is {{name}}</div>
+    {{/if}}
+{{/each}}
+Working with objects
+This section describes Handlebars helpers that can be used when working with objects.
+
+Comparing two objects (#eq, eq, #neq, neq)
+To compare two objects, use the #eq, eq, #neq, and neq helpers.
+
+For two objects to be considered equal, each must have the exact same set of keys and values.
+
+For example, consider these objects, as might be stored on a user profile:
+
+{
+  "obj1": { "a": 1, "b": 2},
+  "obj2": { "a": 1, "b": 2},
+  "obj3": { "a": 1, "b": 3}
+}
+Use the #eq block helper to output a block of content when two objects are equal.
+
+This example outputs The objects are equal:
+
+{{#eq obj1 obj2}}
+    The objects are equal
+{{else}}
+    The objects are not equal
+{{/eq}}
+This example outputs The objects are not equal:
+
+{{#eq obj1 obj3}}
+    The objects are equal
+{{else}}
+    The objects are not equal
+{{/eq}}
+
+The #neq helper works similarly, but returns true when the two objects are not equal.
+
+Use the (non-block) eq helper to compare objects as part of a boolean expression.
+
+This example outputs The objects are equal and b is 2:
+
+{{#and (eq obj1 obj2) (eq obj1.b 2)}}
+    The objects are equal and b is 2
+{{else}}
+    The objects are not equal or b is not 2
+{{/and}}
+The ne helper works similarly, but returns true when the two objects are not equal.
+
+Working with dates
+This section describes various helpers useful for working with dates in Handlebars.
+
+Date comparison (#ifGt, #ifGte, #ifLt, #ifLte)
+The numeric conditionals (#ifGt, #ifGte, #ifLt, #ifLte) work with appropriately formatted dates, since the date strings can be formatted as numeric strings.
+
+Example using #ifGte:
+
+{{#ifGte (dateFormat signupDate format="yyyyMMddHHmmss" tz="UTC") (dateMath "now" "-1M" format="yyyyMMddHHmmss" tz="UTC")}}
+    <div>signupDate is within the last month</div>
+{{else}}
+    <div>signupDate was before the last month</div>
+{{/ifGte}}
+Example using #ifLt:
+
+{{#ifLt (dateFormat signupDate format="yyyyMMddHHmmss" tz="UTC") "20170630000000"}}
+    <div>signupDate is before 6/30/17</div>
+{{else}}
+    <div>signupDate after or on 6/30/17</div>
+{{/ifLt}}
+Date formatting (dateFormat)
+dateFormat outputs a given date in the provided format.
+
+Usage (dateFormat)
+{{dateFormat inputDate format="formatString" tz="timeZoneString"}}
+For example:
+
+{{dateFormat "2018-06-22 14:00:00 +07:00" format="yyyy-MM-dd HH:mm:ss Z" tz="America/Denver"}}
+Parameters:
+
+inputDate (required)
+
+A string that represents a valid date (either a string literal or a variable that contains a date string). Valid input date formats:
+
+yyyy-MM-dd HH:mm:ss Z
+
+For example:
+
+2018-01-01 00:00:00 -0800
+2018-06-22 14:00:00 +07:00
+yyyy-MM-dd HH:mm:ss
+
+Input formats accepted by dateOptionalTimeParser
+
+format (optional)
+
+The format in which to output the date. Acceptable values defined by java.text.SimpleDateFormat.
+
+For example, this expression outputs a given date's day of the week (as a number):
+
+{{dateFormat date format="u"}}
+Additional formats include short,medium, long, and full
+
+tz (optional)
+
+The time zone in which to output the date. For a list of time zone values, read this blog post
+
+For example, this expression takes a date (defined in UTC) and outputs it in New York's time zone:
+
+{{dateFormat "2018-01-01 00:00:00" tz="America/New_York"}}
+Alternatively, use tz=timeZone to select the timeZone defined on the user's profile (if applicable).
+
+NOTE
+
+dateFormat supports an alternate syntax thatuses positional parameters instead of named parameters:
+
+{{dateFormat inputDate formatString localeString}}
+For example:
+
+{{dateFormat "2018-06-01 00:00:00" "full" "es_ES"}}
+When using this syntax:
+
+formatString should be specified in the same way as the format parameter, above.
+
+If formatString is provided, a localeString can also be given. This string should have format languageCode_countryCode, where:
+
+languageCode should be lowercase
+countryCode should be uppercase
+languageCode and countryCode must be separated by an underscore.
+For example: en_ES, de_DE, fr_FR, etc.
+
+It is not possible to pass a localeString without a formatString.
+
+full (dateFormat)
+{{dateFormat myDateField format="full"}}
+Example output: Tuesday, June 19, 2017
+
+long (dateFormat)
+{{dateFormat myDateField format="long"}}
+Example output: June 19, 2017
+
+medium (dateFormat)
+{{dateFormat myDateField format="medium"}}
+Example output: Jun 19, 2017
+
+short (dateFormat)
+{{dateFormat myDateField format="short"}}
+Example output: 6/19/17
+
+Format with locale (dateFormat)
+{{dateFormat myDateField "long" "de_DE"}}
+Example output: 21. Juni 2017
+
+Format with time zone (dateFormat)
+{{dateFormat myDateField tz="America/Los_Angeles"}}
+Date math (dateMath)
+dateMath takes a given date and applies date math to it, as specified by a provided mathematical expression.
+
+Usage (dateMath)
+{{dateMath inputDate dateMathExpression format="formatString" tz="timeZoneString"}}
+For example:
+
+{{dateMath dateParameter "-5h" format="yyyy-MM-dd HH:mm:ss Z" tz="America/New_York" locale="es_ES"}}
+Parameters:
+
+inputDate (required)
+
+A string that represents a valid date (either a string literal or a variable that contains a date string). Valid formats for this paarameter include:
+
+yyyy-MM-dd HH:mm:ss Z
+For example:
+
+2018-01-01 00:00:00 -0800
+
+2018-06-22 14:00:00 +07:00
+
+yyyy-MM-dd HH:mm:ss
+
+Input formats accepted by dateOptionalTimeParser
+
+now - The current time (for the time zone defined by the tz parameter, if available)
+
+midnight - Midnight for the current day (for the time zone defined by the tz parameter, if available)
+
+dateMathExpression (required)
+
+A string that represents the date math to apply to inputDate. In a date math expression, use these time units:
+
+y: Years
+M: Months
+w: Weeks
+d: Days
+h or H: Hours
+m: Minutes
+s: Seconds
+For example:
+
+{{dateMath dateParameter "+1y-1M+1w-1d+1h-1m+1s"}}
+This expression starts with dateParameter, adds one year, subtracts one month, adds one week, subtracts one day, adds one hour, subtracts one minute, and adds one second.
+
+format (optional)
+
+The format in which to output the date. Acceptable values are defined by org.joda.time.format.DateTimeFormat
+
+For example, this expression subtracts five hours from a given date and outputs the day of the week (as a number) associated with the result:
+
+{{dateMath date "-5h" format="e"}}
+Additional formats include short, medium, long, and full
+
+tz (optional)
+
+The time zone in which to output the date. For a list of time zone values, read this blog post
+
+For example, this expression takes an input date (defined in UTC), subtracts one hour, and outputs the result in New York's time zone:
+
+{{dateMath "2018-01-01 00:00:00" "-1h" tz="America/New_York}}
+Use tz=timeZone to select the timeZone defined on the user's profile (if applicable)
+
+locale (optional)
+
+Localizes the output to the given language/locale combination. This string should have format languageCode_countryCode, where:
+
+languageCode should be lowercase
+countryCode should be uppercase
+languageCode and countryCode must be separated by an underscore.
+For example, this expression takes an input date, adds two hours, and outputs the result for locale es_ES:
+
+{{dateMath "2018-01-01 00:00:00" "+2h" format="long" locale="es_ES"}}``
+Output: 1 de enero de 2018
+
+Calculate a date from another date (dateMath)
+{{dateMath myDateField "+1y-1M+3w-17d+7h+1m-50s"}}
+The following example will output a date 30 days after the signUpDate in long format:
+
+{{dateMath signUpDate "+30d" format="long"}}
+For example, if the signUpDate is 2022-10-10 17:47:38 +00:00, the date will display as November 9, 2022.
+
+Date math from now (dateMath)
+{{dateMath "now" "-24h" format="yyyyMMddHHmmss"}}
+Number of days away from a given date (dateMath)
+{{dateMath myDateField (now format="-y'y'+1'y'-M'M'+1'M'-d'd'+1'd'-H'H'-m'm'-s's'" tz="UTC") format="D"}}
+Calculate a person's age (dateMath)
+{{dateMath birthDateField (now format="-y'y'+1'y'-M'M'+1'M'-d'd'+1'd'-H'H'-m'm'-s's'" tz="UTC") format="yy"}}
+Current date and time (now)
+now outputs the current date and time in the provided format.
+
+Usage (now)
+{{now format="formatString"}}
+For example:
+
+{{now format="yyyy"}}
+Parameters:
+
+format (optional)
+
+The format in which to output the date. Acceptable values are defined by java.text.SimpleDateFormat
+
+For example, this expression outputs the day of the week (as a number) associated with the current time:
+
+{{now format="u"}}
+Additional formats include short,medium, long, and full.
+
+Current year (now)
+{{now format="yyyy"}}
+Name of the current day of the week (now)
+{{now format="EEEE"}}
+Current time in epoch milliseconds (timestamp)
+timestamp outputs the current time in epoch milliseconds (number of milliseconds since 1970-01-01 00:00:00 UTC).
+
+{{timestamp}}
+Conditional and boolean logic
+This section describes various conditional and boolean logic helpers supported by Handlebars.
+
+True and false
+Handlebars evaluates these values as false:
+
+null values
+Empty strings ("")
+Empty arrays ([])
+The boolean value false
+Any number with a value of zero (0, 0.0)
+Other values evaluate to true.
+
+If statements (#if)
+The #if helper evaluates a boolean expression. When true, the helper outputs the contents of a block. This example outputs <div>Hi active user!</div> when activeUser evaluates to true (see above); otherwise, it outputs <div>Hi inactive user</div>:
+
+{{#if activeUser}}
+    <div>Hi active user!</div>
+{{else}}
+    <div>Hi inactive user</div>
+{{/if}}
+#if can test nested conditions as demonstrated by this example, which outputs <div>You like pets!</div> to users whose likeCats or likesDogs user profile field is set to true:
+
+{{#if likesCats}}
+    <div>You like pets!</div>
+{{else}}
+    {{#if likesDogs}}
+        <div>You like pets!</div>
+    {{/if}}
+{{/if}}
+And (#and, and)
+This section describes how to use #and and and in boolean expressions:
+
+#and is similar to #if, except it evaluates any number of boolean expressions. If they all evaluate to true, #and outputs its associated block. For example:
+
+{{#and likesCats likesDogs}}
+    <div>You like cats and dogs!</div>
+{{else}}
+    <div>There are some pets you don't like!</div>
+{{/and}}
+#and expressions can make use of other Handlebars helpers:
+
+{{#and likesCats (gte age 18)}}
+    You're an adult who likes cats!
+{{else}}
+    You're not an adult, or you don't like cats, or both!
+{{/and}}
+There also exists a non-block and helper. Thisexample uses this helper to look for any users who like cats, or adults who like dogs:
+
+{{#or likesCats (and likesDogs (gte age 18))}}
+    Either you like cats or you're an adult who likes dogs!
+{{/or}}
+and can output a value based on its evaluation. For example:
+
+{{and likesCats likesDogs likesHamsters yes="Likes all the pets" no="Does not like all the pets"}}
+Or (#or, or)
+This section describes how to use #or and or in boolean expressions:
+
+#or is similar to #if, except it evaluates any number of boolean expressions. If any of those expressions evaluates to true, #or outputs its associated block. For example:
+
+{{#or likesCats likesDogs}}
+    <div>You like cats or dogs!</div>
+{{else}}
+    <div>You do not like cats, and you do not like dogs!</div>
+{{/or}}
+#or expressions can make use of other Handlebars helpers:
+
+{{#or likesCats (gte age 18)}}
+    You like cats, or you're an adult!
+{{else}}
+    You don't like cats and you're not an adult!
+{{/or}}
+There also exists a non-block or helper. This example uses this helper to look for any users who like cats and either like dogs or are an adult:
+
+{{#and likesCats (or likesDogs (gte age 18))}}
+    You like cats, and you either like dogs or you're an adult.
+{{/and}}
+or can output a value based on its evaluation. For example:
+
+{{or likesCats likesDogs likesHamsters yes="You like at least one kind of pet" no="You are not a pet person"}}
+Not (#not, not)
+This section describes how to use #not and not in boolean expressions:
+
+#not negates the evaluation of a boolean expression. For example, if a user profile has a likesCatsvalue of true, this will return The user does like cats!:
+
+{{#not likesCats}}
+    The user does not like cats!
+{{else}}
+    The user does like cats!
+{{/not}}
+#not expressions can make use of other Handlebars helpers:
+
+{{#not (gte age 18)}}
+    You are not an adult.
+{{else}}
+    You are an adult!
+{{/not}}
+There also exists a non-block not helper. This example uses this helper to look for any users who like cats and are not adults:
+
+{{#and likesCats (not (gte age 18))}}
+    You like cats and you are not an adult.
+{{/and}}
+not can output a value based on its evaluation. For example:
+
+{{not likesCats yes="You do not like cats" no="You do like cats"}}
+Unless (#unless)
+#unless outputs its associated block unless the boolean expression is true.
+
+This example outputs the text unless activeUser has a value that evaluates to true (see True and false):
+
+{{#unless activeUser}}
+    <div>Hey inactive user, come on back!</div>
+{{/unless}}
+Other Handlebars helpers
+@key and this
+When you store an object on a user profile, sometimes you may want to look at all of its keys and values (to output them, to find one that matches a particular criteria, etc.). To do this, you can use @key to reference the key, and this to reference the value.
+
+For example, here's an object that contains English and Spanish translations for the same word:
+
+{
+   "translations": {
+      "en_US": "Hello",
+      "es_ES": "Hola"
+   }
+}
+To search for the Spanish translation, you might use code like this:
+
+{{#each translations}}
+    {{#ifContainsStr @key "es"}}
+        The translation for {{@key}} is {{this}}.
+    {{/ifContainsStr}}
+{{/each}}
+For the above translations object, this Handlebars code will output:
+
+The translation for es_ES is Hola.
+This code:
+
+Iterates over each of the object's values (using #each).
+Checks the current value's @key for es (in this example, the key is either en_US or es_ES).
+If es is found in the @key, uses {{this}} to output the translation (Hello or Hola).
+In other words: in each iteration of the loop, you're grabbing one of the object's values (Hello or Hola). If that value's @key contains es, you output the value.
+
+Using @key and this with arrays
+When using #each to iterate over an array (instead of an object), this returns the item in the array, and @key returns the item's 0-based array index.
+
+For example, consider this array and Handlebars code:
+
+{
+   "favoriteColors": ["red", "blue", "green"]
+}
+{{#each favoriteColors}}
+     Key: {{@key}}, Value: {{this}}
+{{/each}}
+For this scenario, the code will output:
+
+Key: 0, Value: red
+Key: 1, Value: blue
+Key: 2, Value: green
+Looking up a value (#lookup)
+If you structure your data feed to resemble the example below, you can leverage the #lookup helper. The email body of this particular example (below) consists of two paragraphs:
+
+Sample data feed
+
+{{#lookup greetings language as |lang|}}{{lang.greeting_1}}{{/lookup}}
+{{#lookup greetings language as |lang|}}{{lang.greeting_2}}{{/lookup}}
+This takes the language value from the user's profile, and performs a lookup against the greetings array (in this case, matching on "en"). It then returns the values associated with greeting_1 and greeting_2 within that object.
+
+Using user profile data with lookup
+
+NOTE
+
+If using #lookup with the email field or any other field whose values contain periods ("."), you must set resolveKey=false in order for the lookup to succeed. For example
+
+{{#lookup greetings email resolveKey=false as |df_email|}}
+Assigning a variable (#assign)
+You can use #assign to set a variable that can be used at later points in a template.
+
+{{#assign "myVar"}}Iterable{{/assign}}
+Greetings from {{myVar}}
+This example will output:
+
+Greetings from Iterable!
+NOTE
+
+The assigned variable will be considered a string.
+
+Inserting fields into snippets
+You can pass fields from your template into your snippet. To do so, use this format:
+
+{{snippet "snippetname" arg0=x arg1=y ...}}
+Skipping/aborting a send
+You can abort (and generate a skip) at any point in a template by using sendSkip. Any send skips originating from this will have a reason of SendAborted. You can pass any additional data you want persisted with the send skip via named parameters.
+
+For example, consider users have a field creditAvailable, and you want to abort the send if the user doesn't have enough credit to buy some product they're considering. You might do something like:
+
+{{#ifLt creditAvailable product.price}}
+  {{sendSkip cause="insufficient credit" creditAvailable=creditAvailable creditRequired=product.price}}
+{{/ifLt}}
+JSON-LD
+If you are using JSON-LD in your email template, you can use normal Handlebars format to include merge parameters inside the structured data block.
